@@ -10,7 +10,16 @@ builder.Services.AddDbContext<QuanLyDonThuContext>(options =>
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
-        options.SignIn.RequireConfirmedAccount = false)
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+        if (builder.Environment.IsDevelopment())
+        {
+            options.Password.RequireDigit = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireNonAlphanumeric = false;
+        }
+    })
     .AddEntityFrameworkStores<QuanLyDonThuContext>()
     .AddDefaultTokenProviders();
 
@@ -48,7 +57,7 @@ if (app.Environment.IsDevelopment())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    foreach (var roleName in new[] { "Admin", "SinhVien", "CanBo" })
+    foreach (var roleName in new[] { "Admin", "SinhVien", "CanBo", "LanhDao" })
     {
         if (!await roleManager.RoleExistsAsync(roleName))
         {
@@ -59,6 +68,49 @@ if (app.Environment.IsDevelopment())
                     $"Không thể tạo role {roleName}: {string.Join(", ", roleResult.Errors.Select(error => error.Description))}");
             }
         }
+
+    const string studentId = "DH52302390";
+    var studentUser = await userManager.FindByNameAsync(studentId);
+    if (studentUser is null)
+    {
+        studentUser = new ApplicationUser
+        {
+            UserName = studentId,
+            Email = $"{studentId.ToLowerInvariant()}@student.stu.edu.vn",
+            EmailConfirmed = true
+        };
+
+        var userResult = await userManager.CreateAsync(studentUser, "52302390");
+        if (!userResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Không thể tạo tài khoản sinh viên: {string.Join(", ", userResult.Errors.Select(error => error.Description))}");
+        }
+    }
+
+    if (!await userManager.IsInRoleAsync(studentUser, "SinhVien"))
+    {
+        var roleResult = await userManager.AddToRoleAsync(studentUser, "SinhVien");
+        if (!roleResult.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Không thể gán role SinhVien: {string.Join(", ", roleResult.Errors.Select(error => error.Description))}");
+        }
+    }
+
+    var context = scope.ServiceProvider.GetRequiredService<QuanLyDonThuContext>();
+    var studentProfile = await context.SinhViens.FindAsync(studentId);
+    if (studentProfile is null)
+    {
+        context.SinhViens.Add(new SinhVien
+        {
+            MaSinhVien = studentId,
+            UserId = studentUser.Id,
+            HoTen = "Sinh viên thử nghiệm",
+            Lop = "Chưa cập nhật"
+        });
+        await context.SaveChangesAsync();
+    }
     }
 
     var adminUser = await userManager.FindByNameAsync("admin");

@@ -32,7 +32,6 @@
         </div>
 
         <form asp-controller="Account" asp-action="Login" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger text-center mb-3 login-validation"></div>
 
             <div class="mb-3">
                 <label asp-for="Username" class="form-label">Mã Sinh viên / Mã Cán bộ</label>
@@ -54,7 +53,7 @@
                 </div>
                 <span asp-validation-for="Password" class="text-danger login-field-validation"></span>
             </div>
-
+            <div asp-validation-summary="ModelOnly" class="text-danger text-center mb-3 login-validation"></div>
             <div class="form-check mb-4">
                 <input asp-for="RememberMe" class="form-check-input" />
                 <label asp-for="RememberMe" class="form-check-label text-muted remember-label">Ghi nhớ đăng nhập</label>

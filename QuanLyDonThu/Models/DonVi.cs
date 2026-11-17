@@ -21,5 +21,5 @@ public partial class DonVi
 
     public virtual DonVi? MaDonViChaNavigation { get; set; }
 
-    public virtual ICollection<LinhVuc> MaLinhVucs { get; set; } = new List<LinhVuc>();
+    public virtual ICollection<LinhVuc> LinhVucs { get; set; } = new List<LinhVuc>();
 }

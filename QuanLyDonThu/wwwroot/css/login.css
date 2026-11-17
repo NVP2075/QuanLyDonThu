@@ -137,6 +137,12 @@ body {
     font-size: 0.9rem;
 }
 
+.login-validation ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
 .remember-label {
     font-size: 0.85rem;
 }

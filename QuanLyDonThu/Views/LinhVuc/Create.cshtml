@@ -1,0 +1,51 @@
+@model LinhVucFormViewModel
+
+@{
+    ViewData["Title"] = "Thêm Lĩnh vực";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="mb-4">
+    <h1 class="h4 fw-bold text-dark mb-1">Thêm lĩnh vực</h1>
+    <p class="text-muted mb-0">Khai báo lĩnh vực và đơn vị phụ trách.</p>
+</div>
+
+<div class="admin-card form-card">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="TenLinhVuc" class="form-label"></label>
+            <input asp-for="TenLinhVuc" class="form-control" maxlength="200" />
+            <span asp-validation-for="TenLinhVuc" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="SoNgayXuLyMacDinh" class="form-label"></label>
+            <input asp-for="SoNgayXuLyMacDinh" class="form-control" min="1" max="3650" />
+            <span asp-validation-for="SoNgayXuLyMacDinh" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="MaDonVi" class="form-label"></label>
+            <select asp-for="MaDonVi" asp-items="ViewBag.MaDonVi" class="form-select">
+                <option value="">-- Chọn đơn vị phụ trách --</option>
+            </select>
+            <span asp-validation-for="MaDonVi" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-4">
+            <input asp-for="DangHoatDong" class="form-check-input" />
+            <label asp-for="DangHoatDong" class="form-check-label"></label>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Lưu lĩnh vực</button>
+            <a asp-action="Index" class="btn btn-light">Hủy</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

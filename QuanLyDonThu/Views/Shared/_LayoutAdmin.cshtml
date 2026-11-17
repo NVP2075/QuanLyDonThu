@@ -1,0 +1,110 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var userName = User.Identity?.Name ?? string.Empty;
+    var userInitial = userName.Length > 0 ? char.ToUpperInvariant(userName[0]) : 'U';
+    var roleLabel = User.IsInRole("Admin") ? "Quản trị viên"
+        : User.IsInRole("CanBo") ? "Cán bộ xử lý"
+        : User.IsInRole("SinhVien") ? "Sinh viên"
+        : User.IsInRole("LanhDao") ? "Lãnh đạo"
+        : "Người dùng";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - STU Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body>
+    <aside class="admin-sidebar">
+        <a asp-controller="Admin" asp-action="Index" class="admin-brand">
+            <i class="bi bi-envelope-paper-fill" aria-hidden="true"></i>
+            <span>STU Portal</span>
+        </a>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <div class="menu-label">Quản trị hệ thống</div>
+            <a asp-controller="DonVi" asp-action="Index" class="menu-item @(currentController == "DonVi" ? "active" : "")">
+                <i class="bi bi-building" aria-hidden="true"></i><span>Quản lý Đơn vị</span>
+            </a>
+            <a asp-controller="LinhVuc" asp-action="Index" class="menu-item @(currentController == "LinhVuc" ? "active" : "")">
+                <i class="bi bi-tags" aria-hidden="true"></i><span>Quản lý Lĩnh vực</span>
+            </a>
+            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
+                <i class="bi bi-people" aria-hidden="true"></i><span>Quản lý Người dùng</span>
+            </span>
+        }
+
+        @if (User.IsInRole("CanBo"))
+        {
+            <div class="menu-label">Nghiệp vụ Cán bộ</div>
+            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
+                <i class="bi bi-inbox" aria-hidden="true"></i><span>Hàng đợi xử lý</span>
+            </span>
+            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
+                <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Đợt tiếp nhận</span>
+            </span>
+        }
+
+        @if (User.IsInRole("SinhVien"))
+        {
+            <div class="menu-label">Cổng Sinh viên</div>
+            <a asp-controller="SinhVien" asp-action="Index" class="menu-item @(currentController == "SinhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="bi bi-grid-1x2-fill" aria-hidden="true"></i><span>Tổng quan</span>
+            </a>
+            <a asp-controller="SinhVien" asp-action="GuiDon" class="menu-item @(currentController == "SinhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "GuiDon" ? "active" : "")">
+                <i class="bi bi-send-fill" aria-hidden="true"></i><span>Gửi đơn thư mới</span>
+            </a>
+            <a asp-controller="SinhVien" asp-action="LichSu" class="menu-item @(currentController == "SinhVien" && ViewContext.RouteData.Values["action"]?.ToString() == "LichSu" ? "active" : "")">
+                <i class="bi bi-clock-history" aria-hidden="true"></i><span>Lịch sử đơn thư</span>
+            </a>
+        }
+
+        @if (User.IsInRole("LanhDao"))
+        {
+            <div class="menu-label">Giám sát</div>
+            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
+                <i class="bi bi-bar-chart" aria-hidden="true"></i><span>Báo cáo</span>
+            </span>
+        }
+
+        <div class="sidebar-footer">
+            <hr />
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="menu-item logout-button">
+                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span>Đăng xuất</span>
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="admin-content">
+        <header class="top-navbar">
+            <div>
+                <span class="top-navbar-title">@ViewData["Title"]</span>
+            </div>
+            <div class="user-profile">
+                <span class="user-avatar" aria-hidden="true">@userInitial</span>
+                <div>
+                    <div class="user-name">@userName</div>
+                    <div class="user-role">@roleLabel</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-wrapper">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

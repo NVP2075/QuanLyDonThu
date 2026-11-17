@@ -110,22 +110,6 @@ public partial class QuanLyDonThuContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(d => d.MaDonViCha)
                 .HasConstraintName("FK_DonVi_Cha");
 
-            entity.HasMany(d => d.MaLinhVucs).WithMany(p => p.MaDonVis)
-                .UsingEntity<Dictionary<string, object>>(
-                    "DonViLinhVuc",
-                    r => r.HasOne<LinhVuc>().WithMany()
-                        .HasForeignKey("MaLinhVuc")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__DonVi_Lin__MaLin__778AC167"),
-                    l => l.HasOne<DonVi>().WithMany()
-                        .HasForeignKey("MaDonVi")
-                        .OnDelete(DeleteBehavior.ClientSetNull)
-                        .HasConstraintName("FK__DonVi_Lin__MaDon__76969D2E"),
-                    j =>
-                    {
-                        j.HasKey("MaDonVi", "MaLinhVuc").HasName("PK__DonVi_Li__CEBD2F852645AB62");
-                        j.ToTable("DonVi_LinhVuc");
-                    });
         });
 
         modelBuilder.Entity<DotTiepNhan>(entity =>
@@ -174,8 +158,15 @@ public partial class QuanLyDonThuContext : IdentityDbContext<ApplicationUser>
 
             entity.ToTable("LinhVuc");
 
+            entity.HasIndex(e => e.MaDonVi, "IX_LinhVuc_MaDonVi");
+
             entity.Property(e => e.DangHoatDong).HasDefaultValue(true);
             entity.Property(e => e.TenLinhVuc).HasMaxLength(200);
+
+            entity.HasOne(d => d.MaDonViNavigation).WithMany(p => p.LinhVucs)
+                .HasForeignKey(d => d.MaDonVi)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_LinhVuc_DonVi_MaDonVi");
         });
 
         modelBuilder.Entity<PhanHoi>(entity =>

@@ -1,0 +1,24 @@
+@model IReadOnlyList<DonThuListItemViewModel>
+@{
+    ViewData["Title"] = "Lịch sử đơn thư";
+    Layout = "_LayoutAdmin";
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h3 mb-0">Lịch sử đơn thư</h1><a asp-action="GuiDon" class="btn btn-primary">Gửi đơn mới</a></div>
+    <div class="card shadow-sm"><div class="card-body">
+        @if (Model.Count == 0)
+        {
+            <p class="text-muted mb-0">Bạn chưa gửi đơn thư nào.</p>
+        }
+        else
+        {
+            <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Mã đơn</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Hạn xử lý</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+            @foreach (var don in Model)
+            {
+                <tr><td>@don.MaCode</td><td>@don.TieuDe</td><td>@don.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td><td>@don.NgayHenXuLy.ToString("dd/MM/yyyy")</td><td>@don.TrangThai</td><td><a asp-action="ChiTiet" asp-route-id="@don.MaDon">Chi tiết</a></td></tr>
+            }
+            </tbody></table></div>
+        }
+    </div></div>
+</div>

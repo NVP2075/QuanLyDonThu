@@ -9,11 +9,13 @@ public partial class LinhVuc
 
     public string TenLinhVuc { get; set; } = null!;
 
+    public int MaDonVi { get; set; }
+
     public int SoNgayXuLyMacDinh { get; set; }
 
     public bool? DangHoatDong { get; set; }
 
     public virtual ICollection<DonThu> DonThus { get; set; } = new List<DonThu>();
 
-    public virtual ICollection<DonVi> MaDonVis { get; set; } = new List<DonVi>();
+    public virtual DonVi MaDonViNavigation { get; set; } = null!;
 }
