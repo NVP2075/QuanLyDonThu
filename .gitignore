@@ -1,0 +1,17 @@
+.vs/
+**/bin/
+**/obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.log
+*.pdb
+.env
+.env.*
+!.env.example
+*.secrets.json
+*.pfx
+*.p12
+*.key
+*.pem
