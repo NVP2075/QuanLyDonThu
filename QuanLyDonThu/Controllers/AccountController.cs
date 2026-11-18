@@ -24,6 +24,12 @@ public class AccountController : Controller
         return View();
     }
 
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
@@ -41,7 +47,10 @@ public class AccountController : Controller
 
         if (!result.Succeeded)
         {
-            ModelState.AddModelError(string.Empty, "Tài khoản hoặc mật khẩu không chính xác.");
+            var errorMessage = result.IsLockedOut
+                ? "Tài khoản đã bị khóa. Vui lòng liên hệ P.CTSV để biết thêm thông tin."
+                : "Tài khoản hoặc mật khẩu không chính xác.";
+            ModelState.AddModelError(string.Empty, errorMessage);
             return View(model);
         }
 

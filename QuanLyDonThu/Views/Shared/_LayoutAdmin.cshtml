@@ -13,7 +13,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - STU Portal</title>
+    <title>@ViewData["Title"] - Cổng Tiếp Nhận Đơn Thư STU</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
@@ -25,32 +25,32 @@
     <aside class="admin-sidebar">
         <a asp-controller="Admin" asp-action="Index" class="admin-brand">
             <i class="bi bi-envelope-paper-fill" aria-hidden="true"></i>
-            <span>STU Portal</span>
+            <span>Cổng Tiếp Nhận Đơn Thư STU</span>
         </a>
 
         @if (User.IsInRole("Admin"))
         {
             <div class="menu-label">Quản trị hệ thống</div>
             <a asp-controller="DonVi" asp-action="Index" class="menu-item @(currentController == "DonVi" ? "active" : "")">
-                <i class="bi bi-building" aria-hidden="true"></i><span>Quản lý Đơn vị</span>
+                <i class="bi bi-building" aria-hidden="true"></i><span> Đơn vị</span>
             </a>
             <a asp-controller="LinhVuc" asp-action="Index" class="menu-item @(currentController == "LinhVuc" ? "active" : "")">
-                <i class="bi bi-tags" aria-hidden="true"></i><span>Quản lý Lĩnh vực</span>
+                <i class="bi bi-tags" aria-hidden="true"></i><span>Lĩnh vực</span>
             </a>
-            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
-                <i class="bi bi-people" aria-hidden="true"></i><span>Quản lý Người dùng</span>
-            </span>
+            <a asp-controller="UserManagement" asp-action="Index" class="menu-item @(currentController == "UserManagement" ? "active" : "")">
+                <i class="bi bi-people" aria-hidden="true"></i><span>Người dùng</span>
+            </a>
         }
 
         @if (User.IsInRole("CanBo"))
         {
             <div class="menu-label">Nghiệp vụ Cán bộ</div>
-            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
+            <a asp-controller="CanBo" asp-action="Index" class="menu-item @(currentController == "CanBo" ? "active" : "")">
                 <i class="bi bi-inbox" aria-hidden="true"></i><span>Hàng đợi xử lý</span>
-            </span>
-            <span class="menu-item menu-item-disabled" aria-disabled="true" title="Chức năng đang phát triển">
+            </a>
+            <a asp-controller="DotTiepNhan" asp-action="Index" class="menu-item @(currentController == "DotTiepNhan" ? "active" : "")">
                 <i class="bi bi-calendar-event" aria-hidden="true"></i><span>Đợt tiếp nhận</span>
-            </span>
+            </a>
         }
 
         @if (User.IsInRole("SinhVien"))
@@ -105,6 +105,7 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/admin.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

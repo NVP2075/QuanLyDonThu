@@ -8,6 +8,8 @@
 - Petition rules: students submit freely or via intake batches; route automatically to the unit responsible for the selected field; statuses: 0 New, 1 Processing after staff accepts and is assigned, 2 Responded, 3 Closed; only assigned staff can respond or close; overdue when NgayHenXuLy has passed and petition is not closed.
 - For QuanLyDonThu, prefer keeping ViewModel classes in a dedicated ViewModels folder rather than alongside EF entity models.
 - For Razor views, keep presentation stylesheets and JavaScript behavior in separate static files under wwwroot rather than embedding them inline, except for small view-specific data when necessary.
+- Only CanBo manages intake campaigns (DotTiepNhan); Admin must not have menu access or controller authorization for intake management.
+- For Admin management pages, ensure complete applicable UI/backend polish: include pagination for tables, tooltips on icon buttons, confirmation dialogs for risky actions, and accurate workflow/schema handling. Disable units/fields rather than hard-delete when referenced by petitions. Staff remains assigned to exactly one unit unless user changes that requirement.
 
 ## Coding Rules
 - Use ViewModels rather than passing entities to views.

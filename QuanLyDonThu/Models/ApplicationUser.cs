@@ -5,6 +5,10 @@ namespace QuanLyDonThu.Models;
 
 public class ApplicationUser : IdentityUser
 {
+    public int? MaDonVi { get; set; }
+
+    public virtual DonVi? DonVi { get; set; }
+
     public virtual ICollection<DonThu> DonThus { get; set; } = new List<DonThu>();
 
     public virtual ICollection<LichSuXuLy> LichSuXuLies { get; set; } = new List<LichSuXuLy>();

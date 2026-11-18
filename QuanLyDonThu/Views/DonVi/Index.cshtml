@@ -1,132 +1,59 @@
-@model IReadOnlyList<DonViListItemViewModel>
+@model DonViIndexViewModel
 
 @{
-    ViewData["Title"] = "Quản lý Đơn vị";
+    ViewData["Title"] = "Quản lý đơn vị";
     Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-    <div>
-        <h1 class="h4 fw-bold text-dark mb-1">Quản lý Đơn vị</h1>
-        <p class="text-muted mb-0">Danh sách các phòng ban, đoàn khoa trong trường.</p>
-    </div>
-    <a asp-action="Create" class="btn btn-primary fw-semibold px-3">
-        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Thêm đơn vị mới
-    </a>
+    <div><h1 class="h4 fw-bold text-dark mb-1">Quản lý đơn vị</h1><p class="text-muted mb-0">Danh sách các phòng ban, đoàn khoa trong trường.</p></div>
+    <a asp-action="Create" class="btn btn-primary fw-semibold px-3"><i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Thêm đơn vị mới</a>
 </div>
-
-@if (TempData["Success"] is string successMessage)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>@successMessage
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-    </div>
-}
-
+@if (TempData["Success"] is string successMessage) { <div class="alert alert-success alert-dismissible fade show" role="alert" data-auto-dismiss>@successMessage<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div> }
+@if (TempData["Error"] is string errorMessage) { <div class="alert alert-danger alert-dismissible fade show" role="alert" data-auto-dismiss>@errorMessage<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div> }
 <div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-4">
-        <div class="admin-card h-100 p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:48px;height:48px"><i class="bi bi-buildings fs-5" aria-hidden="true"></i></div>
-                <div><div class="small text-muted fw-semibold">Tổng số đơn vị</div><div class="h3 fw-bold mb-0">@Model.Count</div></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="admin-card h-100 p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width:48px;height:48px"><i class="bi bi-check-circle fs-5" aria-hidden="true"></i></div>
-                <div><div class="small text-muted fw-semibold">Đang hoạt động</div><div class="h3 fw-bold mb-0">@Model.Count(x => x.DangHoatDong)</div></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-xl-4">
-        <div class="admin-card h-100 p-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width:48px;height:48px"><i class="bi bi-lock fs-5" aria-hidden="true"></i></div>
-                <div><div class="small text-muted fw-semibold">Ngừng hoạt động</div><div class="h3 fw-bold mb-0">@Model.Count(x => !x.DangHoatDong)</div></div>
-            </div>
-        </div>
-    </div>
+    <div class="col-sm-6 col-xl-4"><div class="admin-card h-100 p-3"><div class="d-flex align-items-center gap-3"><div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:48px;height:48px"><i class="bi bi-buildings fs-5" aria-hidden="true"></i></div><div><div class="small text-muted fw-semibold">Tổng số đơn vị</div><div class="h3 fw-bold mb-0">@Model.TotalCount</div></div></div></div></div>
+    <div class="col-sm-6 col-xl-4"><div class="admin-card h-100 p-3"><div class="d-flex align-items-center gap-3"><div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width:48px;height:48px"><i class="bi bi-check-circle fs-5" aria-hidden="true"></i></div><div><div class="small text-muted fw-semibold">Đang hoạt động</div><div class="h3 fw-bold mb-0">@Model.ActiveCount</div></div></div></div></div>
+    <div class="col-sm-6 col-xl-4"><div class="admin-card h-100 p-3"><div class="d-flex align-items-center gap-3"><div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width:48px;height:48px"><i class="bi bi-lock fs-5" aria-hidden="true"></i></div><div><div class="small text-muted fw-semibold">Ngừng hoạt động</div><div class="h3 fw-bold mb-0">@Model.InactiveCount</div></div></div></div></div>
 </div>
-
-<div class="admin-card">
+<div class="admin-card" data-bulk-list>
     <div class="p-3 p-md-4">
         <div class="d-flex flex-wrap gap-2 justify-content-between mb-3">
-            <div class="input-group" style="max-width:360px">
-                <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted" aria-hidden="true"></i></span>
-                <input id="donViSearch" type="search" class="form-control bg-light border-start-0" placeholder="Tìm theo mã hoặc tên đơn vị..." aria-label="Tìm đơn vị" />
-            </div>
-            <select id="donViStatus" class="form-select" style="max-width:210px" aria-label="Lọc trạng thái">
-                <option value="all">Tất cả trạng thái</option>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Ngừng hoạt động</option>
-            </select>
+            <form method="get" asp-action="Index" class="d-flex flex-wrap gap-2">
+                <div class="input-group" style="max-width:360px"><span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted" aria-hidden="true"></i></span><input name="search" type="search" value="@Model.Search" class="form-control bg-light border-start-0" placeholder="Tìm theo mã hoặc tên đơn vị..." aria-label="Tìm đơn vị" /></div>
+                <select name="status" class="form-select" style="max-width:210px" aria-label="Lọc trạng thái"><option value="all" selected="@(Model.Status == "all")">Tất cả trạng thái</option><option value="active" selected="@(Model.Status == "active")">Đang hoạt động</option><option value="inactive" selected="@(Model.Status == "inactive")">Ngừng hoạt động</option></select>
+                <button type="submit" class="btn btn-primary">Lọc</button><a asp-action="Index" class="btn btn-light">Xóa lọc</a>
+            </form>
         </div>
         <div class="table-responsive">
+            <form asp-action="BulkToggleStatus" method="post" id="donViBulkForm" data-confirm="Bạn có chắc muốn bật/tắt trạng thái các đơn vị đã chọn?">@Html.AntiForgeryToken()<div class="d-none d-flex align-items-center gap-2 flex-wrap mb-3" data-bulk-toolbar><span class="text-muted small me-2"><span data-selected-count>0</span> đã chọn</span><button type="submit" class="btn btn-sm btn-outline-primary">Bật/tắt trạng thái</button></div></form>
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr><th>Mã đơn vị</th><th>Tên đơn vị</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr>
-                </thead>
-                <tbody id="donViRows">
-                    @foreach (var item in Model)
+                <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" aria-label="Chọn tất cả đơn vị" data-select-all /></th><th>Mã đơn vị</th><th>Tên đơn vị</th><th>Đơn chưa đóng</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+                <tbody>
+                    @foreach (var item in Model.Page)
                     {
-                        <tr data-search="@($"{item.MaDonVi} {item.TenDonVi}".ToLowerInvariant())" data-status="@(item.DangHoatDong ? "active" : "inactive")">
-                            <td class="fw-bold text-primary">#@item.MaDonVi</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="bg-primary text-white rounded d-flex justify-content-center align-items-center fw-bold" style="width:40px;height:40px">@(string.IsNullOrWhiteSpace(item.TenDonVi) ? "?" : item.TenDonVi[..1].ToUpperInvariant())</div>
-                                    <span class="fw-semibold">@item.TenDonVi</span>
-                                </div>
-                            </td>
-                            <td>
-                                @if (item.DangHoatDong)
-                                {
-                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Đang hoạt động</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Ngừng hoạt động</span>
-                                }
-                            </td>
-                            <td class="text-end text-nowrap">
-                                <a asp-action="Edit" asp-route-id="@item.MaDonVi" class="btn btn-sm btn-light text-primary" title="Sửa" aria-label="Sửa đơn vị"><i class="bi bi-pencil-square" aria-hidden="true"></i></a>
-                                <form asp-action="ToggleStatus" asp-route-id="@item.MaDonVi" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn đổi trạng thái đơn vị này?');">
-                                    <button type="submit" class="btn btn-sm btn-light @(item.DangHoatDong ? "text-danger" : "text-success")" title="Đổi trạng thái" aria-label="Đổi trạng thái"><i class="bi @(item.DangHoatDong ? "bi-lock" : "bi-unlock")" aria-hidden="true"></i></button>
-                                </form>
-                            </td>
-                        </tr>
+                        <tr><td><input type="checkbox" class="form-check-input" name="ids" value="@item.MaDonVi" form="donViBulkForm" aria-label="Chọn đơn vị @item.TenDonVi" data-row-select /></td><td class="fw-bold text-primary">#@item.MaDonVi</td><td><div class="d-flex align-items-center gap-2"><div class="bg-primary-subtle text-primary rounded d-flex justify-content-center align-items-center" style="width:32px;height:32px"><i class="bi bi-building" aria-hidden="true"></i></div><span class="fw-semibold">@item.TenDonVi</span></div></td><td>@item.SoDonChuaDong</td><td>@if (item.DangHoatDong) { <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Đang hoạt động</span> } else { <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-2">Ngừng hoạt động</span> }</td><td class="text-end text-nowrap"><a asp-action="Edit" asp-route-id="@item.MaDonVi" class="btn btn-sm btn-light text-primary" title="Sửa đơn vị" data-bs-toggle="tooltip" aria-label="Sửa đơn vị"><i class="bi bi-pencil-square" aria-hidden="true"></i></a><form asp-action="ToggleStatus" asp-route-id="@item.MaDonVi" method="post" class="d-inline" data-confirm="Bạn có chắc muốn đổi trạng thái đơn vị này?"><button type="submit" class="btn btn-sm btn-light @(item.DangHoatDong ? "text-danger" : "text-success")" title="@(item.DangHoatDong ? "Ngừng hoạt động đơn vị" : "Mở hoạt động đơn vị")" data-bs-toggle="tooltip" aria-label="Đổi trạng thái"><i class="bi @(item.DangHoatDong ? "bi-lock" : "bi-unlock")" aria-hidden="true"></i></button></form></td></tr>
                     }
                 </tbody>
             </table>
-            @if (Model.Count == 0)
-            {
-                <div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Chưa có đơn vị nào trong hệ thống.</p></div>
-            }
-            <div id="donViNoResults" class="empty-state d-none"><i class="bi bi-search" aria-hidden="true"></i><p>Không tìm thấy đơn vị phù hợp.</p></div>
+            @if (Model.Page.Count == 0) { <div class="empty-state"><i class="bi bi-inbox" aria-hidden="true"></i><p>Không tìm thấy đơn vị phù hợp.</p></div> }
+            else { <partial name="_Pagination" model="@(new PaginationViewModel { PageNumber = Model.Page.PageNumber, TotalPages = Model.Page.TotalPages, Search = Model.Search, Status = Model.Status, StatusParameter = "status" })" /> }
         </div>
     </div>
 </div>
-
+<div class="modal fade" id="actionConfirmModal" tabindex="-1" aria-labelledby="actionConfirmTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow"><div class="modal-header"><h2 class="modal-title fs-5" id="actionConfirmTitle">Xác nhận thao tác</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div><div class="modal-body" id="actionConfirmMessage"></div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-primary" id="actionConfirmSubmit">Xác nhận</button></div></div></div></div>
 @section Scripts {
     <script>
         (() => {
-            const search = document.getElementById('donViSearch');
-            const status = document.getElementById('donViStatus');
-            const rows = [...document.querySelectorAll('#donViRows tr')];
-            const noResults = document.getElementById('donViNoResults');
-            const filterRows = () => {
-                const query = search.value.trim().toLocaleLowerCase();
-                let visible = 0;
-                rows.forEach(row => {
-                    const matches = row.dataset.search.includes(query) && (status.value === 'all' || row.dataset.status === status.value);
-                    row.classList.toggle('d-none', !matches);
-                    if (matches) visible++;
-                });
-                noResults.classList.toggle('d-none', visible !== 0 || rows.length === 0);
-            };
-            search.addEventListener('input', filterRows);
-            status.addEventListener('change', filterRows);
+            const modalElement = document.getElementById('actionConfirmModal');
+            const modal = new bootstrap.Modal(modalElement);
+            let pendingForm = null;
+            document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => { event.preventDefault(); pendingForm = form; document.getElementById('actionConfirmMessage').textContent = form.dataset.confirm; modal.show(); }));
+            document.getElementById('actionConfirmSubmit').addEventListener('click', () => {
+                if (!pendingForm) return;
+                pendingForm.submit();
+            });
+            modalElement.addEventListener('hidden.bs.modal', () => { pendingForm = null; });
         })();
     </script>
 }

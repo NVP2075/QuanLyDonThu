@@ -1,0 +1,32 @@
+@model PaginationViewModel
+@{
+    var previousRoutes = new Dictionary<string, string?> { ["page"] = (Model.PageNumber - 1).ToString() };
+    var currentRoutes = new Dictionary<string, string?> { ["page"] = Model.PageNumber.ToString() };
+    var nextRoutes = new Dictionary<string, string?> { ["page"] = (Model.PageNumber + 1).ToString() };
+    foreach (var routes in new[] { previousRoutes, currentRoutes, nextRoutes })
+    {
+        if (!string.IsNullOrWhiteSpace(Model.Search)) routes["search"] = Model.Search;
+        if (!string.IsNullOrWhiteSpace(Model.Role)) routes["role"] = Model.Role;
+        if (!string.IsNullOrWhiteSpace(Model.Status) && !string.IsNullOrWhiteSpace(Model.StatusParameter)) routes[Model.StatusParameter] = Model.Status;
+    }
+}
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Phân trang danh sách">
+        <ul class="pagination justify-content-end mb-0 mt-3">
+            <li class="page-item @(Model.PageNumber <= 1 ? "disabled" : "")">
+                <a class="page-link" asp-all-route-data="previousRoutes" aria-label="Trang trước">Trước</a>
+            </li>
+            @for (var pageNumber = 1; pageNumber <= Model.TotalPages; pageNumber++)
+            {
+                <li class="page-item @(pageNumber == Model.PageNumber ? "active" : "")">
+                    @{ currentRoutes["page"] = pageNumber.ToString(); }
+                    <a class="page-link" asp-all-route-data="currentRoutes">@pageNumber</a>
+                </li>
+            }
+            <li class="page-item @(Model.PageNumber >= Model.TotalPages ? "disabled" : "")">
+                <a class="page-link" asp-all-route-data="nextRoutes" aria-label="Trang sau">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}

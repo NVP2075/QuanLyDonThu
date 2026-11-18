@@ -5,21 +5,77 @@
 }
 
 <div class="container-fluid py-4">
-    <h1 class="h3 mb-4">Gửi đơn thư</h1>
-    <form asp-action="GuiDon" method="post" enctype="multipart/form-data" class="card shadow-sm">
-        <div class="card-body">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-            @if (Model.MaDot.HasValue)
-            {
-                <input asp-for="MaDot" type="hidden" />
-                <div class="alert alert-info">Đơn được gửi trong đợt tiếp nhận đã chọn.</div>
-            }
-            <div class="mb-3"><label asp-for="MaLinhVuc" class="form-label"></label><select asp-for="MaLinhVuc" asp-items="ViewBag.MaLinhVuc" class="form-select"><option value="">-- Chọn lĩnh vực --</option></select><span asp-validation-for="MaLinhVuc" class="text-danger"></span></div>
-            <div class="mb-3"><label asp-for="TieuDe" class="form-label"></label><input asp-for="TieuDe" class="form-control" maxlength="300" /><span asp-validation-for="TieuDe" class="text-danger"></span></div>
-            <div class="mb-3"><label asp-for="NoiDung" class="form-label"></label><textarea asp-for="NoiDung" class="form-control" rows="8"></textarea><span asp-validation-for="NoiDung" class="text-danger"></span></div>
-            <div class="mb-3"><label asp-for="FileMinhChung" class="form-label"></label><input asp-for="FileMinhChung" type="file" accept=".jpg,.jpeg,.png,.pdf" class="form-control" /><div class="form-text">Chấp nhận JPG, PNG hoặc PDF; tối đa 5 MB.</div><span asp-validation-for="FileMinhChung" class="text-danger"></span></div>
+    <div class="mb-4">
+        <h1 class="h3 fw-bold mb-1">Tạo đơn thư mới</h1>
+        <p class="text-muted mb-0">Vui lòng cung cấp thông tin chính xác. Các trường có dấu <span class="text-danger">*</span> là bắt buộc.</p>
+    </div>
+    <div class="row">
+        <div class="col-12 col-xl-9 col-xxl-8">
+            <form asp-action="GuiDon" method="post" enctype="multipart/form-data" class="card border-0 shadow-sm" style="border-radius:14px">
+                <div class="card-body p-4 p-lg-5">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    @if (Model.MaDot.HasValue)
+                    {
+                        <input asp-for="MaDot" type="hidden" />
+                        <div class="alert alert-info rounded-3 mb-4">Đơn được gửi trong đợt tiếp nhận đã chọn.</div>
+                    }
+                    <div class="mb-4">
+                        <label asp-for="MaLinhVuc" class="form-label fw-semibold">Lĩnh vực đơn thư <span class="text-danger">*</span></label>
+                        <select asp-for="MaLinhVuc" asp-items="ViewBag.MaLinhVuc" class="form-select form-select-lg"><option value="">-- Chọn lĩnh vực --</option></select>
+                        <span asp-validation-for="MaLinhVuc" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="TieuDe" class="form-label fw-semibold">Tiêu đề đơn <span class="text-danger">*</span></label>
+                        <input asp-for="TieuDe" class="form-control form-control-lg" maxlength="300" placeholder="Nhập tiêu đề ngắn gọn" />
+                        <span asp-validation-for="TieuDe" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="NoiDung" class="form-label fw-semibold">Nội dung chi tiết <span class="text-danger">*</span></label>
+                        <textarea asp-for="NoiDung" class="form-control" rows="7" placeholder="Mô tả rõ sự việc, thời gian và thông tin liên quan..."></textarea>
+                        <span asp-validation-for="NoiDung" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-2">
+                        <label asp-for="FileMinhChung" class="form-label fw-semibold"><i class="bi bi-paperclip me-1"></i>Tệp minh chứng</label>
+                        <label for="FileMinhChung" id="evidenceDropZone" class="d-flex flex-column align-items-center justify-content-center text-center p-4 border border-2 border-dashed rounded-3 bg-light" style="min-height:150px;cursor:pointer;transition:background-color .15s,border-color .15s">
+                            <i class="bi bi-cloud-arrow-up fs-2 text-primary mb-2"></i>
+                            <span class="fw-semibold">Kéo thả tệp vào đây hoặc nhấn để chọn</span>
+                            <span class="small text-muted mt-1">JPG, PNG hoặc PDF · Tối đa 5 MB</span>
+                            <span id="evidenceFileName" class="small text-primary fw-semibold mt-2">@(Model.FileMinhChung?.FileName ?? string.Empty)</span>
+                        </label>
+                        <input asp-for="FileMinhChung" type="file" accept=".jpg,.jpeg,.png,.pdf" class="visually-hidden" />
+                        <span asp-validation-for="FileMinhChung" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 px-4 px-lg-5 pb-4 d-flex flex-wrap justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-light fw-semibold px-4 py-2">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-primary fw-semibold px-4 py-2"><i class="bi bi-send-fill me-1"></i>Gửi đơn thư</button>
+                </div>
+            </form>
         </div>
-        <div class="card-footer bg-white d-flex gap-2"><button type="submit" class="btn btn-primary">Gửi đơn</button><a asp-action="Index" class="btn btn-outline-secondary">Hủy</a></div>
-    </form>
+    </div>
 </div>
-@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const input = document.getElementById('FileMinhChung');
+            const dropZone = document.getElementById('evidenceDropZone');
+            const fileName = document.getElementById('evidenceFileName');
+            const showFile = file => { fileName.textContent = file ? file.name : ''; };
+            input.addEventListener('change', () => showFile(input.files[0]));
+            ['dragenter', 'dragover'].forEach(eventName => dropZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                dropZone.classList.add('border-primary', 'bg-primary-subtle');
+            }));
+            ['dragleave', 'drop'].forEach(eventName => dropZone.addEventListener(eventName, event => {
+                event.preventDefault();
+                dropZone.classList.remove('border-primary', 'bg-primary-subtle');
+            }));
+            dropZone.addEventListener('drop', event => {
+                if (!event.dataTransfer.files.length) return;
+                input.files = event.dataTransfer.files;
+                showFile(input.files[0]);
+            });
+        })();
+    </script>
+}

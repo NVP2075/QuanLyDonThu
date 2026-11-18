@@ -24,7 +24,10 @@ builder.Services
     .AddDefaultTokenProviders();
 
 builder.Services.ConfigureApplicationCookie(options =>
-    options.LoginPath = "/Account/Login");
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
 
 builder.Services.AddControllersWithViews();
 
@@ -68,6 +71,7 @@ if (app.Environment.IsDevelopment())
                     $"Không thể tạo role {roleName}: {string.Join(", ", roleResult.Errors.Select(error => error.Description))}");
             }
         }
+    }
 
     const string studentId = "DH52302390";
     var studentUser = await userManager.FindByNameAsync(studentId);
@@ -106,12 +110,16 @@ if (app.Environment.IsDevelopment())
         {
             MaSinhVien = studentId,
             UserId = studentUser.Id,
-            HoTen = "Sinh viên thử nghiệm",
+            HoTen = "Nguyễn Văn Pháp",
             Lop = "Chưa cập nhật"
         });
-        await context.SaveChangesAsync();
     }
+    else
+    {
+        studentProfile.HoTen = "Nguyễn Văn Pháp";
     }
+
+    await context.SaveChangesAsync();
 
     var adminUser = await userManager.FindByNameAsync("admin");
     if (adminUser is null)

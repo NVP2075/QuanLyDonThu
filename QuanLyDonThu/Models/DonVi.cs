@@ -15,6 +15,8 @@ public partial class DonVi
 
     public virtual ICollection<DonThu> DonThus { get; set; } = new List<DonThu>();
 
+    public virtual ICollection<ApplicationUser> CanBos { get; set; } = new List<ApplicationUser>();
+
     public virtual ICollection<DotTiepNhan> DotTiepNhans { get; set; } = new List<DotTiepNhan>();
 
     public virtual ICollection<DonVi> InverseMaDonViChaNavigation { get; set; } = new List<DonVi>();

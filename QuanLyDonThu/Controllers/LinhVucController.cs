@@ -17,15 +17,33 @@ public class LinhVucController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? search, string? status, int page = 1)
     {
-        var linhVucs = await _context.LinhVucs
+        const int pageSize = 10;
+        var fields = _context.LinhVucs.AsNoTracking();
+        var normalizedSearch = search?.Trim();
+        if (!string.IsNullOrEmpty(normalizedSearch))
+        {
+            fields = fields.Where(field => field.TenLinhVuc.Contains(normalizedSearch)
+                || field.MaDonViNavigation.TenDonVi.Contains(normalizedSearch)
+                || field.MaLinhVuc.ToString().Contains(normalizedSearch));
+        }
+
+        status = status is "active" or "inactive" ? status : "all";
+        if (status == "active") fields = fields.Where(field => field.DangHoatDong == true);
+        if (status == "inactive") fields = fields.Where(field => field.DangHoatDong != true);
+
+        var totalCount = await fields.CountAsync();
+        page = Math.Max(1, page);
+        var linhVucs = await fields
             .AsNoTracking()
             .Include(l => l.MaDonViNavigation)
             .OrderBy(l => l.TenLinhVuc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
 
-        var model = linhVucs.Select(l => new LinhVucListItemViewModel
+        var items = linhVucs.Select(l => new LinhVucListItemViewModel
         {
             MaLinhVuc = l.MaLinhVuc,
             TenLinhVuc = l.TenLinhVuc,
@@ -33,6 +51,23 @@ public class LinhVucController : Controller
             TenDonVi = l.MaDonViNavigation.TenDonVi,
             DangHoatDong = l.DangHoatDong == true
         }).ToList();
+
+        var model = new LinhVucIndexViewModel
+        {
+            TotalCount = await _context.LinhVucs.CountAsync(),
+            ActiveCount = await _context.LinhVucs.CountAsync(field => field.DangHoatDong == true),
+            InactiveCount = await _context.LinhVucs.CountAsync(field => field.DangHoatDong != true),
+            AverageDays = await _context.LinhVucs.Select(field => (double?)field.SoNgayXuLyMacDinh).AverageAsync() ?? 0,
+            Search = search,
+            Status = status,
+            Page = new PagedResult<LinhVucListItemViewModel>
+            {
+                Items = items,
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalCount = totalCount
+            }
+        };
 
         return View(model);
     }
@@ -138,6 +173,14 @@ public class LinhVucController : Controller
             return NotFound();
         }
 
+        if (linhVuc.DangHoatDong == true && !model.DangHoatDong
+            && await _context.DonThus.AnyAsync(petition => petition.MaLinhVuc == id && petition.TrangThai != 2))
+        {
+            ModelState.AddModelError(nameof(model.DangHoatDong), "Không thể ngừng hoạt động lĩnh vực vì vẫn còn đơn thư chưa đóng.");
+            await PopulateDonViSelectListAsync(model.MaDonVi);
+            return View(model);
+        }
+
         linhVuc.TenLinhVuc = model.TenLinhVuc.Trim();
         linhVuc.MaDonVi = donVi.MaDonVi;
         linhVuc.SoNgayXuLyMacDinh = model.SoNgayXuLyMacDinh;
@@ -159,6 +202,12 @@ public class LinhVucController : Controller
             return NotFound();
         }
 
+        if (linhVuc.DangHoatDong == true && await _context.DonThus.AnyAsync(petition => petition.MaLinhVuc == id && petition.TrangThai != 2))
+        {
+            TempData["Error"] = "Không thể ngừng hoạt động lĩnh vực vì vẫn còn đơn thư chưa đóng.";
+            return RedirectToAction(nameof(Index));
+        }
+
         linhVuc.DangHoatDong = !(linhVuc.DangHoatDong ?? false);
         await _context.SaveChangesAsync();
 
@@ -166,6 +215,37 @@ public class LinhVucController : Controller
             ? "Đã mở hoạt động cho lĩnh vực."
             : "Đã ngừng hoạt động lĩnh vực.";
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> BulkToggleStatus(List<int> ids)
+    {
+        var selectedIds = ids.Where(id => id > 0).Distinct().ToList();
+        var linhVucs = await _context.LinhVucs.Where(linhVuc => selectedIds.Contains(linhVuc.MaLinhVuc)).ToListAsync();
+        if (linhVucs.Count == 0)
+        {
+            TempData["Error"] = "Vui lòng chọn ít nhất một lĩnh vực hợp lệ.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var blockedCount = 0;
+        foreach (var linhVuc in linhVucs)
+        {
+            if (linhVuc.DangHoatDong == true && await _context.DonThus.AnyAsync(petition => petition.MaLinhVuc == linhVuc.MaLinhVuc && petition.TrangThai != 2))
+            {
+                blockedCount++;
+                continue;
+            }
+            linhVuc.DangHoatDong = !(linhVuc.DangHoatDong ?? false);
+        }
+
+        await _context.SaveChangesAsync();
+        var changedCount = linhVucs.Count - blockedCount;
+        TempData[changedCount > 0 ? "Success" : "Error"] = blockedCount > 0
+            ? $"Đã cập nhật {changedCount} lĩnh vực; không thể ngừng hoạt động {blockedCount} lĩnh vực còn đơn chưa đóng."
+            : $"Đã đổi trạng thái {changedCount} lĩnh vực.";
         return RedirectToAction(nameof(Index));
     }
 

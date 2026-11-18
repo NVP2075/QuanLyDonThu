@@ -36,7 +36,25 @@ public class SinhVienController : Controller
             return Forbid();
         }
 
+        var hoTenSinhVien = await _context.SinhViens
+            .AsNoTracking()
+            .Where(s => s.MaSinhVien == maSinhVien)
+            .Select(s => s.HoTen)
+            .FirstOrDefaultAsync();
+
         var now = DateTime.Now;
+        var thongKeDon = await _context.DonThus
+            .AsNoTracking()
+            .Where(d => d.MaSinhVien == maSinhVien)
+            .GroupBy(_ => 1)
+            .Select(group => new
+            {
+                TongDon = group.Count(),
+                DangXuLy = group.Count(d => d.TrangThai == 1),
+                DaDong = group.Count(d => d.TrangThai >= 2)
+            })
+            .FirstOrDefaultAsync();
+
         var dotTiepNhans = await _context.DotTiepNhans
             .AsNoTracking()
             .Where(d => d.ThoiGianMo <= now && d.ThoiGianDong >= now)
@@ -69,6 +87,10 @@ public class SinhVienController : Controller
 
         return View(new SinhVienDashboardViewModel
         {
+            HoTenSinhVien = string.IsNullOrWhiteSpace(hoTenSinhVien) ? maSinhVien : hoTenSinhVien,
+            TongDon = thongKeDon?.TongDon ?? 0,
+            DangXuLy = thongKeDon?.DangXuLy ?? 0,
+            DaDong = thongKeDon?.DaDong ?? 0,
             DotTiepNhans = dotTiepNhans,
             DonThuGanDay = donThuGanDay
         });

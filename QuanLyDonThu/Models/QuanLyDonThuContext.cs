@@ -46,6 +46,12 @@ public partial class QuanLyDonThuContext : IdentityDbContext<ApplicationUser>
             entity.Property(e => e.NormalizedEmail).HasMaxLength(256);
             entity.Property(e => e.NormalizedUserName).HasMaxLength(256);
             entity.Property(e => e.UserName).HasMaxLength(256);
+
+            entity.HasOne(e => e.DonVi)
+                .WithMany(d => d.CanBos)
+                .HasForeignKey(e => e.MaDonVi)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_AspNetUsers_DonVi_MaDonVi");
         });
 
         modelBuilder.Entity<DonThu>(entity =>

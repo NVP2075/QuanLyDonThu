@@ -1,0 +1,132 @@
+@model UserManagementIndexViewModel
+@{
+    ViewData["Title"] = "Quản lý người dùng";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+@if (TempData["ResetPasswordResult"] is string resetPasswordResult)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @resetPasswordResult
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+    </div>
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h4 fw-bold text-dark mb-1">Quản lý người dùng</h1><p class="text-muted mb-0">Tạo và quản lý tài khoản Sinh viên, Cán bộ, Admin và Lãnh đạo.</p></div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Tạo tài khoản</a>
+</div>
+
+@if (TempData["Success"] is string success)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert" data-auto-dismiss>@success<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" data-auto-dismiss>@error<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div>
+}
+
+<div class="admin-card mb-3">
+    <form method="get" asp-action="Index" class="row g-2 align-items-end p-3">
+        <div class="col-md-6"><label for="search" class="form-label">Tìm tài khoản</label><input id="search" name="search" value="@Model.Search" class="form-control" placeholder="MSSV/mã cán bộ, họ tên hoặc email" /></div>
+        <div class="col-md-3"><label for="role" class="form-label">Vai trò</label><select id="role" name="role" asp-items="ViewBag.Roles" class="form-select"><option value="">Tất cả vai trò</option></select></div>
+        <div class="col-md-3 d-flex gap-2"><button type="submit" class="btn btn-primary"><i class="bi bi-search me-1"></i>Tìm</button><a asp-action="Index" class="btn btn-light">Xóa lọc</a></div>
+    </form>
+</div>
+
+<div class="admin-card" data-bulk-list>
+    <div class="p-3 pb-0">
+        <form asp-action="BulkAction" method="post" id="userBulkForm" class="d-none d-flex align-items-center gap-2 flex-wrap mb-3" data-bulk-toolbar data-confirm="Xác nhận thực hiện thao tác trên các tài khoản đã chọn?">
+            @Html.AntiForgeryToken()
+            <span class="text-muted small me-2"><span data-selected-count>0</span> đã chọn</span>
+            <button type="submit" name="action" value="lock" class="btn btn-sm btn-outline-danger">Khóa</button>
+            <button type="submit" name="action" value="unlock" class="btn btn-sm btn-outline-success">Mở khóa</button>
+            <span class="small text-muted">Thao tác sẽ bỏ qua tài khoản không phù hợp.</span>
+        </form>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th><input type="checkbox" class="form-check-input" aria-label="Chọn tất cả tài khoản" data-select-all /></th><th>Tài khoản</th><th>Họ tên / Lớp</th><th>Đơn vị</th><th>Vai trò</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @foreach (var user in Model.Page)
+            {
+                <tr>
+                    <td><input type="checkbox" class="form-check-input" name="ids" value="@user.Id" form="userBulkForm" aria-label="Chọn tài khoản @user.UserName" data-row-select /></td>
+                    <td><div class="fw-semibold">@user.UserName</div><small class="text-muted">@user.Email</small></td>
+                    <td>@(user.HoTen ?? "—")<br /><small class="text-muted">@(user.Lop ?? "")</small></td>
+                    <td>@(user.TenDonVi ?? "—")</td>
+                    <td><span class="badge bg-primary-subtle text-primary">@user.RoleDisplayName</span></td>
+                    <td>@if (user.IsLocked) { <span class="badge bg-danger-subtle text-danger">Đã khóa</span> } else { <span class="badge bg-success-subtle text-success">Hoạt động</span> }</td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Edit" asp-route-id="@user.Id" class="btn btn-sm btn-light text-primary" title="Chỉnh sửa tài khoản" data-bs-toggle="tooltip" aria-label="Chỉnh sửa @user.UserName"><i class="bi bi-pencil-square"></i></a>
+                        @if (user.Role == "SinhVien")
+                        {
+                            <form asp-action="ResetStudentPassword" asp-route-id="@user.Id" method="post" class="d-inline" data-confirm="Tạo mật khẩu tạm thời ngẫu nhiên mới cho sinh viên này? Mật khẩu sẽ chỉ hiển thị một lần.">
+                                <button type="submit" class="btn btn-sm btn-light text-warning" title="Đặt lại mật khẩu" data-bs-toggle="tooltip" aria-label="Đặt lại mật khẩu @user.UserName"><i class="bi bi-key"></i></button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-action="ResetPassword" asp-route-id="@user.Id" class="btn btn-sm btn-light text-warning" title="Đặt lại mật khẩu" data-bs-toggle="tooltip" aria-label="Đặt lại mật khẩu @user.UserName"><i class="bi bi-key"></i></a>
+                        }
+                        <form asp-action="ToggleLock" asp-route-id="@user.Id" method="post" class="d-inline" data-confirm="Bạn có chắc muốn @(user.IsLocked ? "mở khóa" : "khóa") tài khoản này?">
+                            <button type="submit" class="btn btn-sm btn-light @(user.IsLocked ? "text-success" : "text-danger")" title="@(user.IsLocked ? "Mở khóa tài khoản" : "Khóa tài khoản")" data-bs-toggle="tooltip" aria-label="@(user.IsLocked ? "Mở khóa" : "Khóa") @user.UserName"><i class="bi @(user.IsLocked ? "bi-unlock" : "bi-lock")"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (Model.Page.Count == 0)
+        {
+            <div class="empty-state"><i class="bi bi-people" aria-hidden="true"></i><p>Không tìm thấy tài khoản phù hợp.</p></div>
+        }
+        else
+        {
+            <partial name="_Pagination" model="@(new PaginationViewModel { PageNumber = Model.Page.PageNumber, TotalPages = Model.Page.TotalPages, Search = Model.Search, Role = Model.Role })" />
+        }
+    </div>
+
+<div class="modal fade" id="actionConfirmModal" tabindex="-1" aria-labelledby="actionConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header"><h2 class="modal-title fs-5" id="actionConfirmTitle">Xác nhận thao tác</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+            <div class="modal-body" id="actionConfirmMessage"></div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-primary" id="actionConfirmSubmit">Xác nhận</button></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const modalElement = document.getElementById('actionConfirmModal');
+            const modal = new bootstrap.Modal(modalElement);
+            const message = document.getElementById('actionConfirmMessage');
+            const submitButton = document.getElementById('actionConfirmSubmit');
+            let pendingForm = null;
+            let pendingSubmitter = null;
+
+            document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
+                event.preventDefault();
+                pendingForm = form;
+                pendingSubmitter = event.submitter;
+                message.textContent = form.dataset.confirm;
+                modal.show();
+            }));
+
+            submitButton.addEventListener('click', () => {
+                if (!pendingForm) return;
+                if (pendingSubmitter?.name) {
+                    const actionInput = document.createElement('input');
+                    actionInput.type = 'hidden';
+                    actionInput.name = pendingSubmitter.name;
+                    actionInput.value = pendingSubmitter.value;
+                    pendingForm.append(actionInput);
+                }
+                pendingForm.submit();
+            });
+            modalElement.addEventListener('hidden.bs.modal', () => { pendingForm = null; pendingSubmitter = null; });
+        })();
+    </script>
+}
+</div>

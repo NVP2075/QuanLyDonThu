@@ -5,20 +5,114 @@
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4"><h1 class="h3 mb-0">Lịch sử đơn thư</h1><a asp-action="GuiDon" class="btn btn-primary">Gửi đơn mới</a></div>
-    <div class="card shadow-sm"><div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><h1 class="h3 fw-bold mb-1">Lịch sử đơn thư</h1><p class="text-muted mb-0">Theo dõi tiến độ xử lý các đơn thư bạn đã gửi.</p></div>
+        <a asp-action="GuiDon" class="btn btn-primary fw-semibold px-4"><i class="bi bi-plus-lg me-1"></i>Gửi đơn mới</a>
+    </div>
+    <div class="card border-0 shadow-sm" style="border-radius:14px"><div class="card-body p-3 p-lg-4">
         @if (Model.Count == 0)
         {
-            <p class="text-muted mb-0">Bạn chưa gửi đơn thư nào.</p>
+            <div class="text-center text-muted py-5"><i class="bi bi-inbox fs-1 d-block mb-3"></i><p class="mb-0">Bạn chưa gửi đơn thư nào.</p></div>
         }
         else
         {
-            <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Mã đơn</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Hạn xử lý</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-            @foreach (var don in Model)
-            {
-                <tr><td>@don.MaCode</td><td>@don.TieuDe</td><td>@don.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td><td>@don.NgayHenXuLy.ToString("dd/MM/yyyy")</td><td>@don.TrangThai</td><td><a asp-action="ChiTiet" asp-route-id="@don.MaDon">Chi tiết</a></td></tr>
-            }
-            </tbody></table></div>
+            <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                <div class="input-group" style="max-width:380px">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted" aria-hidden="true"></i></span>
+                    <input id="historySearch" type="search" class="form-control bg-light border-start-0" placeholder="Tìm mã đơn hoặc tiêu đề..." aria-label="Tìm đơn thư" />
+                </div>
+                <select id="historyStatus" class="form-select" style="max-width:210px" aria-label="Lọc trạng thái">
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="new">Mới tiếp nhận</option>
+                    <option value="processing">Đang xử lý</option>
+                    <option value="closed">Đã đóng</option>
+                </select>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light"><tr><th>Mã đơn</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Hạn xử lý</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+                    <tbody id="historyRows">
+                    @foreach (var don in Model)
+                    {
+                        var statusKey = don.TrangThai == 0 ? "new" : don.TrangThai == 1 ? "processing" : "closed";
+                        <tr data-search="@($"{don.MaCode} {don.TieuDe}".ToLowerInvariant())" data-status="@statusKey">
+                            <td class="fw-semibold text-primary text-nowrap">@don.MaCode</td>
+                            <td>@don.TieuDe</td>
+                            <td class="text-nowrap">@don.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-nowrap">@don.NgayHenXuLy.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @if (don.TrangThai == 0) { <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-2">Mới tiếp nhận</span> }
+                                else if (don.TrangThai == 1) { <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis px-3 py-2">Đang xử lý</span> }
+                                else { <span class="badge rounded-pill bg-success-subtle text-success px-3 py-2">Đã đóng</span> }
+                            </td>
+                            <td class="text-end"><a asp-action="ChiTiet" asp-route-id="@don.MaDon" class="btn btn-sm btn-light text-primary"><i class="bi bi-eye me-1" aria-hidden="true"></i>Chi tiết</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+                <div id="historyNoResults" class="text-center text-muted py-5 d-none"><i class="bi bi-search fs-2 d-block mb-2"></i>Không tìm thấy đơn thư phù hợp.</div>
+            </div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                <small id="historyPageInfo" class="text-muted" aria-live="polite"></small>
+                <nav aria-label="Phân trang lịch sử đơn thư"><ul id="historyPagination" class="pagination pagination-sm mb-0"></ul></nav>
+            </div>
         }
     </div></div>
 </div>
+
+@if (Model.Count > 0)
+{
+    @section Scripts {
+        <script>
+            (() => {
+                const pageSize = 10;
+                const search = document.getElementById('historySearch');
+                const status = document.getElementById('historyStatus');
+                const rows = [...document.querySelectorAll('#historyRows tr')];
+                const pagination = document.getElementById('historyPagination');
+                const pageInfo = document.getElementById('historyPageInfo');
+                const noResults = document.getElementById('historyNoResults');
+                let currentPage = 1;
+
+                const render = () => {
+                    const query = search.value.trim().toLocaleLowerCase();
+                    const filteredRows = rows.filter(row => row.dataset.search.includes(query) && (status.value === 'all' || row.dataset.status === status.value));
+                    const pageCount = Math.ceil(filteredRows.length / pageSize);
+                    currentPage = Math.min(currentPage, Math.max(pageCount, 1));
+                    rows.forEach(row => row.classList.add('d-none'));
+                    filteredRows.slice((currentPage - 1) * pageSize, currentPage * pageSize).forEach(row => row.classList.remove('d-none'));
+                    noResults.classList.toggle('d-none', filteredRows.length !== 0);
+                    pagination.replaceChildren();
+
+                    const addPageButton = (label, page, disabled = false, active = false) => {
+                        const item = document.createElement('li');
+                        item.className = `page-item${disabled ? ' disabled' : ''}${active ? ' active' : ''}`;
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'page-link';
+                        button.textContent = label;
+                        button.disabled = disabled;
+                        button.setAttribute('aria-label', label === '‹' ? 'Trang trước' : label === '›' ? 'Trang sau' : `Trang ${label}`);
+                        if (!disabled && !active) button.addEventListener('click', () => { currentPage = page; render(); });
+                        item.append(button);
+                        pagination.append(item);
+                    };
+
+                    if (pageCount > 1) {
+                        addPageButton('‹', currentPage - 1, currentPage === 1);
+                        for (let page = 1; page <= pageCount; page++) addPageButton(String(page), page, false, page === currentPage);
+                        addPageButton('›', currentPage + 1, currentPage === pageCount);
+                    }
+
+                    const start = filteredRows.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+                    const end = Math.min(currentPage * pageSize, filteredRows.length);
+                    pageInfo.textContent = `Hiển thị ${start}–${end} trong ${filteredRows.length} đơn`;
+                };
+
+                search.addEventListener('input', () => { currentPage = 1; render(); });
+                status.addEventListener('change', () => { currentPage = 1; render(); });
+                render();
+            })();
+        </script>
+    }
+}

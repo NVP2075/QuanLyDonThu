@@ -1,46 +1,76 @@
 @model SinhVienDashboardViewModel
 @{
-    ViewData["Title"] = "Tổng quan sinh viên";
+    ViewData["Title"] = "Tổng quan";
     Layout = "_LayoutAdmin";
 }
 
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div><h1 class="h3 mb-1">Tổng quan sinh viên</h1><p class="text-muted mb-0">Theo dõi các đợt tiếp nhận và đơn thư gần đây.</p></div>
-        <a asp-action="GuiDon" class="btn btn-primary"><i class="bi bi-send me-1"></i> Gửi đơn mới</a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div><h1 class="h3 fw-bold mb-1">Xin chào, @Model.HoTenSinhVien!</h1><p class="text-muted mb-0">Chào mừng bạn đến với Cổng thông tin Đơn thư STU.</p></div>
+        <a asp-action="GuiDon" class="btn btn-primary fw-semibold px-4 py-2"><i class="bi bi-send-fill me-1"></i> Gửi đơn mới</a>
     </div>
-    <section class="card shadow-sm mb-4">
-        <div class="card-header bg-white"><h2 class="h5 mb-0">Đợt tiếp nhận đang mở</h2></div>
-        <div class="card-body">
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <section class="card border-0 shadow-sm h-100" style="border-radius:14px"><div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex justify-content-center align-items-center" style="width:50px;height:50px"><i class="bi bi-file-earmark-text fs-5"></i></div>
+                <div><div class="text-muted fw-semibold small">Tổng số đơn đã gửi</div><div class="h3 fw-bold mb-0">@Model.TongDon</div></div>
+            </div></section>
+        </div>
+        <div class="col-md-4">
+            <section class="card border-0 shadow-sm h-100" style="border-radius:14px"><div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-warning bg-opacity-10 text-warning d-flex justify-content-center align-items-center" style="width:50px;height:50px"><i class="bi bi-hourglass-split fs-5"></i></div>
+                <div><div class="text-muted fw-semibold small">Đang xử lý</div><div class="h3 fw-bold mb-0">@Model.DangXuLy</div></div>
+            </div></section>
+        </div>
+        <div class="col-md-4">
+            <section class="card border-0 shadow-sm h-100" style="border-radius:14px"><div class="card-body p-4 d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-10 text-success d-flex justify-content-center align-items-center" style="width:50px;height:50px"><i class="bi bi-check2-circle fs-5"></i></div>
+                <div><div class="text-muted fw-semibold small">Đã đóng</div><div class="h3 fw-bold mb-0">@Model.DaDong</div></div>
+            </div></section>
+        </div>
+    </div>
+
+    <section class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 fw-bold mb-0">Đợt tiếp nhận đang mở</h2></div>
+        <div class="row g-3">
             @if (Model.DotTiepNhans.Count == 0)
             {
-                <p class="text-muted mb-0">Hiện chưa có đợt tiếp nhận nào đang mở.</p>
+                <div class="col-12"><div class="card border-0 shadow-sm text-center p-4" style="border-radius:14px"><i class="bi bi-calendar-x fs-2 text-muted mb-2"></i><p class="text-muted mb-0">Hiện chưa có đợt tiếp nhận nào đang mở.</p></div></div>
             }
             else
             {
-                <div class="table-responsive"><table class="table align-middle mb-0">
-                    <thead><tr><th>Sự kiện</th><th>Mở từ</th><th>Đóng lúc</th><th></th></tr></thead>
-                    <tbody>@foreach (var dot in Model.DotTiepNhans)
-                    {
-                        <tr><td>@dot.TenSuKien</td><td>@dot.ThoiGianMo.ToString("dd/MM/yyyy HH:mm")</td><td>@dot.ThoiGianDong.ToString("dd/MM/yyyy HH:mm")</td><td><a asp-action="GuiDon" asp-route-maDot="@dot.MaDot" class="btn btn-sm btn-outline-primary">Gửi đơn</a></td></tr>
-                    }</tbody>
-                </table></div>
+                @foreach (var dot in Model.DotTiepNhans)
+                {
+                    <div class="col-lg-6">
+                        <article class="card border-0 shadow-sm h-100" style="border-radius:14px;border-left:4px solid var(--bs-primary)!important"><div class="card-body p-4">
+                            <h3 class="h6 fw-bold mb-3">@dot.TenSuKien</h3>
+                            <p class="text-muted small mb-3"><i class="bi bi-calendar-event me-1"></i>Mở đến @dot.ThoiGianDong.ToString("dd/MM/yyyy HH:mm")</p>
+                            <a asp-action="GuiDon" asp-route-maDot="@dot.MaDot" class="btn btn-outline-primary w-100">Gửi đơn ngay</a>
+                        </div></article>
+                    </div>
+                }
             }
         </div>
     </section>
-    <section class="card shadow-sm">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center"><h2 class="h5 mb-0">5 đơn thư gần nhất</h2><a asp-action="LichSu">Xem lịch sử</a></div>
-        <div class="card-body">
+
+    <section class="card border-0 shadow-sm" style="border-radius:14px">
+        <div class="card-header bg-white border-0 px-4 pt-4 d-flex justify-content-between align-items-center"><h2 class="h5 fw-bold mb-0">5 đơn thư gần nhất</h2><a asp-action="LichSu" class="text-decoration-none">Xem lịch sử</a></div>
+        <div class="card-body p-4">
             @if (Model.DonThuGanDay.Count == 0)
             {
-                <p class="text-muted mb-0">Bạn chưa gửi đơn thư nào.</p>
+                <div class="text-center text-muted py-4"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Bạn chưa gửi đơn thư nào.</div>
             }
             else
             {
-                <div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Mã đơn</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+                <div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Mã đơn</th><th>Tiêu đề</th><th>Ngày gửi</th><th>Trạng thái</th><th></th></tr></thead><tbody>
                 @foreach (var don in Model.DonThuGanDay)
                 {
-                    <tr><td>@don.MaCode</td><td>@don.TieuDe</td><td>@don.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td><td>@don.TrangThai</td><td><a asp-action="ChiTiet" asp-route-id="@don.MaDon">Chi tiết</a></td></tr>
+                    <tr><td class="fw-semibold text-primary">@don.MaCode</td><td>@don.TieuDe</td><td>@don.NgayTao?.ToString("dd/MM/yyyy HH:mm")</td><td>
+                        @if (don.TrangThai == 0) { <span class="badge rounded-pill bg-primary-subtle text-primary">Mới tiếp nhận</span> }
+                        else if (don.TrangThai == 1) { <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis">Đang xử lý</span> }
+                        else { <span class="badge rounded-pill bg-success-subtle text-success">Đã đóng</span> }
+                    </td><td><a asp-action="ChiTiet" asp-route-id="@don.MaDon" class="btn btn-sm btn-light text-primary">Chi tiết</a></td></tr>
                 }
                 </tbody></table></div>
             }

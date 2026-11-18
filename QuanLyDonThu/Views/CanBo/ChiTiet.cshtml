@@ -1,0 +1,49 @@
+@model CanBoChiTietDonThuViewModel
+@{
+    ViewData["Title"] = "Chi tiết đơn thư";
+    Layout = "_LayoutAdmin";
+    var assignedToCurrentUser = Model.MaCanBoXuLy == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h3 mb-1">@Model.TieuDe</h1><p class="text-muted mb-0">Mã đơn: @(Model.MaCode ?? $"#{Model.MaDon}")</p></div><a asp-action="Index" class="btn btn-outline-secondary">Quay lại hàng đợi</a></div>
+    @if (TempData["Success"] is string success) { <div class="alert alert-success" data-auto-dismiss>@success</div> }
+    @if (TempData["Error"] is string error) { <div class="alert alert-danger" data-auto-dismiss>@error</div> }
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <section class="admin-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-3"><h2 class="h5">Nội dung đơn</h2><span class="badge @(Model.TrangThai == 0 ? "text-bg-primary" : Model.TrangThai == 1 ? "text-bg-warning" : "text-bg-success")">@(Model.TrangThai switch { 0 => "Mới", 1 => "Đang xử lý", 2 => "Đã đóng", _ => "Không xác định" })</span></div>
+                @if (Model.QuaHan) { <div class="alert alert-danger py-2"><i class="bi bi-clock-history"></i> Đơn đã quá hạn xử lý (@Model.NgayHenXuLy.ToString("dd/MM/yyyy")).</div> }
+                <div class="bg-light p-3 rounded mb-4"><div class="row"><div class="col-md-6 mb-2"><strong>Người gửi:</strong> @Model.HoTenSinhVien (@Model.MaSinhVien)</div><div class="col-md-6 mb-2"><strong>Lớp:</strong> @Model.TenLop</div><div class="col-md-6 mb-2"><strong>Lĩnh vực:</strong> @Model.TenLinhVuc</div><div class="col-md-6 mb-2"><strong>Đơn vị:</strong> @Model.TenDonVi</div><div class="col-md-6 mb-2"><strong>Ngày gửi:</strong> @Model.NgayTao?.ToString("dd/MM/yyyy HH:mm")</div><div class="col-md-6 mb-2"><strong>Hạn xử lý:</strong> @Model.NgayHenXuLy.ToString("dd/MM/yyyy")</div><div class="col-12"><strong>Đợt tiếp nhận:</strong> @(Model.TenDot ?? "Gửi tự do")</div></div></div>
+                <h3 class="h6 fw-bold">Nội dung chi tiết</h3><p style="white-space:pre-wrap">@Model.NoiDung</p>
+            </section>
+            <section class="admin-card p-4 mb-4"><h2 class="h5">Tệp minh chứng</h2>
+                @if (Model.TepMinhChungs.Count == 0) { <p class="text-muted mb-0">Không có tệp đính kèm.</p> }
+                else { <ul class="mb-0">@foreach (var file in Model.TepMinhChungs) { <li><a href="@file.DuongDan">@file.TenTepGoc</a></li> }</ul> }
+            </section>
+            <section class="admin-card p-4"><h2 class="h5">Lịch sử phản hồi</h2>
+                @if (Model.PhanHois.Count == 0) { <p class="text-muted mb-0">Chưa có phản hồi.</p> }
+                else { @foreach (var reply in Model.PhanHois) { <article class="border-bottom pb-3 mb-3"><div class="d-flex justify-content-between"><strong>@reply.NguoiGui</strong><small class="text-muted">@reply.NgayGui?.ToString("dd/MM/yyyy HH:mm")</small></div><p class="mb-0 mt-2">@reply.NoiDung</p></article> } }
+            </section>
+        </div>
+        <div class="col-lg-4"><div class="admin-card p-4 sticky-top" style="top:20px"><h2 class="h5 border-bottom pb-2">Bảng điều khiển</h2>
+            @if (Model.TrangThai == 0)
+            {
+                <p class="alert alert-warning py-2">Đơn thư chưa có cán bộ nhận xử lý.</p>
+                <form asp-action="Nhan" method="post"><input type="hidden" name="id" value="@Model.MaDon" /><button class="btn btn-primary w-100" type="submit">Nhận xử lý đơn này</button></form>
+            }
+            else if (assignedToCurrentUser && Model.TrangThai == 1)
+            {
+                <p class="alert alert-info py-2">Bạn đang là cán bộ phụ trách đơn này.</p>
+                <form asp-action="PhanHoi" method="post"><input type="hidden" name="MaDon" value="@Model.MaDon" /><div class="mb-3"><label for="NoiDung" class="form-label fw-bold">Phản hồi sinh viên</label><textarea id="NoiDung" name="NoiDung" class="form-control" rows="5" maxlength="4000" required></textarea></div><button class="btn btn-success w-100 mb-3" type="submit">Phản hồi & đóng đơn</button></form>
+                <button class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#transferModal" type="button">Chuyển tiếp đơn vị khác</button>
+            }
+            else if (Model.TrangThai == 1) { <p class="alert alert-secondary">Đơn đang được xử lý bởi cán bộ khác.</p> }
+            else { <p class="alert alert-success">Đơn đã đóng và không thể mở lại hoặc phản hồi thêm.</p> }
+        </div></div>
+    </div>
+</div>
+@if (assignedToCurrentUser && Model.TrangThai == 1)
+{
+    <div class="modal fade" id="transferModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><form asp-action="Chuyen" method="post"><div class="modal-header"><h2 class="modal-title h5">Chuyển tiếp đơn thư</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div><div class="modal-body"><input type="hidden" name="MaDon" value="@Model.MaDon" /><div class="mb-3"><label for="MaDonViMoi" class="form-label">Đơn vị nhận</label><select id="MaDonViMoi" name="MaDonViMoi" class="form-select" required><option value="">-- Chọn đơn vị --</option>@foreach (var unit in Model.DonViChuyenTiep) { <option value="@unit.MaDonVi">@unit.TenDonVi</option> }</select></div><div class="mb-3"><label for="LyDo" class="form-label">Lý do chuyển <span class="text-danger">*</span></label><textarea id="LyDo" name="LyDo" class="form-control" rows="3" maxlength="500" required></textarea></div></div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button><button type="submit" class="btn btn-danger">Xác nhận chuyển</button></div></form></div></div></div>
+}

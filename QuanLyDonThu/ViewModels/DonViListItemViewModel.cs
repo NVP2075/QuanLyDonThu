@@ -7,4 +7,6 @@ public class DonViListItemViewModel
     public string TenDonVi { get; set; } = string.Empty;
 
     public bool DangHoatDong { get; set; }
+
+    public int SoDonChuaDong { get; set; }
 }

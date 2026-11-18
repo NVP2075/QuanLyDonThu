@@ -1,0 +1,61 @@
+@model IReadOnlyList<DotTiepNhanManagementListItemViewModel>
+@{
+    ViewData["Title"] = "Quản lý đợt tiếp nhận";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div><h1 class="h4 fw-bold text-dark mb-1">Quản lý đợt tiếp nhận</h1><p class="text-muted mb-0">Tạo và quản lý thời gian tiếp nhận đơn theo từng đơn vị.</p></div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Tạo đợt tiếp nhận</a>
+</div>
+@if (TempData["Success"] is string success) { <div class="alert alert-success alert-dismissible fade show" data-auto-dismiss>@success<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div> }
+@if (TempData["Error"] is string error) { <div class="alert alert-danger alert-dismissible fade show" data-auto-dismiss>@error<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button></div> }
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Tên đợt</th><th>Đơn vị</th><th>Ngày sự kiện</th><th>Thời gian tiếp nhận</th><th>Số đơn</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @foreach (var dot in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@dot.TenSuKien</td>
+                    <td>@dot.TenDonVi</td>
+                    <td>@dot.NgaySuKien.ToString("dd/MM/yyyy")</td>
+                    <td class="text-nowrap">@dot.ThoiGianMo.ToString("dd/MM/yyyy HH:mm") – @dot.ThoiGianDong.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td><span class="badge bg-secondary-subtle text-dark">@dot.SoDon</span></td>
+                    <td>@if (dot.DangMo) { <span class="badge rounded-pill bg-success-subtle text-success">Đang mở</span> } else { <span class="badge rounded-pill bg-secondary-subtle text-secondary">Đã đóng</span> }</td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Edit" asp-route-id="@dot.MaDot" class="btn btn-sm btn-light text-primary" title="Sửa"><i class="bi bi-pencil-square"></i></a>
+                        <form asp-action="ToggleOpen" asp-route-id="@dot.MaDot" method="post" class="d-inline" data-confirm="@(dot.DangMo ? "Đóng" : "Mở") đợt tiếp nhận này?">
+                            <button type="submit" class="btn btn-sm btn-light @(dot.DangMo ? "text-danger" : "text-success")" title="@(dot.DangMo ? "Đóng đợt" : "Mở đợt")"><i class="bi @(dot.DangMo ? "bi-pause-circle" : "bi-play-circle")"></i></button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (Model.Count == 0) { <div class="empty-state"><i class="bi bi-calendar-event"></i><p>Chưa có đợt tiếp nhận nào.</p></div> }
+    </div>
+</div>
+
+<div class="modal fade" id="actionConfirmModal" tabindex="-1" aria-labelledby="actionConfirmTitle" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow">
+    <div class="modal-header"><h2 class="modal-title fs-5" id="actionConfirmTitle">Xác nhận thao tác</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+    <div class="modal-body" id="actionConfirmMessage"></div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button><button type="button" class="btn btn-primary" id="actionConfirmSubmit">Xác nhận</button></div>
+</div></div></div>
+@section Scripts {
+    <script>
+        (() => {
+            const modalElement = document.getElementById('actionConfirmModal');
+            const modal = new bootstrap.Modal(modalElement);
+            let pendingForm = null;
+            document.querySelectorAll('form[data-confirm]').forEach(form => form.addEventListener('submit', event => {
+                event.preventDefault(); pendingForm = form;
+                document.getElementById('actionConfirmMessage').textContent = form.dataset.confirm;
+                modal.show();
+            }));
+            document.getElementById('actionConfirmSubmit').addEventListener('click', () => pendingForm?.submit());
+            modalElement.addEventListener('hidden.bs.modal', () => { pendingForm = null; });
+        })();
+    </script>
+}
